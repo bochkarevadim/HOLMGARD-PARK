@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0058)file:///Users/vadimbockarev/Downloads/paintball-timer.html -->
-<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>PAINTBALL — ЗАХВАТ ТОЧЕК</title>
-<link href="./PAINTBALL — ЗАХВАТ ТОЧЕК_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0c0f;
@@ -375,90 +375,12 @@
   </div>
 
   <!-- POINTS -->
-  <div class="points-section" id="pointsGrid"><div class="point-card" id="card-p1">
-      <div class="point-header">
-        <div class="point-name">ТОЧКА 1</div>
-        <div class="point-dot " id="dot-p1"></div>
-      </div>
-      <div class="point-info-row">
-        <div>
-          <div class="owner-lbl">Владелец</div>
-          <div class="owner-name none" id="own-p1">СВОБОДНА</div>
-        </div>
-        <div class="pt-timer none" id="tmr-p1">00:00</div>
-      </div>
-      <div class="team-buttons">
-        
-          <button class="team-btn red" id="tb-p1-red" onclick="capture(&#39;p1&#39;,&#39;red&#39;)" disabled="">
-            <span class="tb-icon">🔴</span>
-            <span class="tb-label">КРА</span>
-          </button>
-          <button class="team-btn blue" id="tb-p1-blue" onclick="capture(&#39;p1&#39;,&#39;blue&#39;)" disabled="">
-            <span class="tb-icon">🔵</span>
-            <span class="tb-label">СИН</span>
-          </button>
-          <button class="team-btn yellow" id="tb-p1-yellow" onclick="capture(&#39;p1&#39;,&#39;yellow&#39;)" disabled="">
-            <span class="tb-icon">🟡</span>
-            <span class="tb-label">ЖЁЛ</span>
-          </button>
-      </div></div><div class="point-card" id="card-p2">
-      <div class="point-header">
-        <div class="point-name">ТОЧКА 2</div>
-        <div class="point-dot " id="dot-p2"></div>
-      </div>
-      <div class="point-info-row">
-        <div>
-          <div class="owner-lbl">Владелец</div>
-          <div class="owner-name none" id="own-p2">СВОБОДНА</div>
-        </div>
-        <div class="pt-timer none" id="tmr-p2">00:00</div>
-      </div>
-      <div class="team-buttons">
-        
-          <button class="team-btn red" id="tb-p2-red" onclick="capture(&#39;p2&#39;,&#39;red&#39;)" disabled="">
-            <span class="tb-icon">🔴</span>
-            <span class="tb-label">КРА</span>
-          </button>
-          <button class="team-btn blue" id="tb-p2-blue" onclick="capture(&#39;p2&#39;,&#39;blue&#39;)" disabled="">
-            <span class="tb-icon">🔵</span>
-            <span class="tb-label">СИН</span>
-          </button>
-          <button class="team-btn yellow" id="tb-p2-yellow" onclick="capture(&#39;p2&#39;,&#39;yellow&#39;)" disabled="">
-            <span class="tb-icon">🟡</span>
-            <span class="tb-label">ЖЁЛ</span>
-          </button>
-      </div></div><div class="point-card" id="card-p3">
-      <div class="point-header">
-        <div class="point-name">ТОЧКА 3</div>
-        <div class="point-dot " id="dot-p3"></div>
-      </div>
-      <div class="point-info-row">
-        <div>
-          <div class="owner-lbl">Владелец</div>
-          <div class="owner-name none" id="own-p3">СВОБОДНА</div>
-        </div>
-        <div class="pt-timer none" id="tmr-p3">00:00</div>
-      </div>
-      <div class="team-buttons">
-        
-          <button class="team-btn red" id="tb-p3-red" onclick="capture(&#39;p3&#39;,&#39;red&#39;)" disabled="">
-            <span class="tb-icon">🔴</span>
-            <span class="tb-label">КРА</span>
-          </button>
-          <button class="team-btn blue" id="tb-p3-blue" onclick="capture(&#39;p3&#39;,&#39;blue&#39;)" disabled="">
-            <span class="tb-icon">🔵</span>
-            <span class="tb-label">СИН</span>
-          </button>
-          <button class="team-btn yellow" id="tb-p3-yellow" onclick="capture(&#39;p3&#39;,&#39;yellow&#39;)" disabled="">
-            <span class="tb-icon">🟡</span>
-            <span class="tb-label">ЖЁЛ</span>
-          </button>
-      </div></div></div>
+  <div class="points-section" id="pointsGrid"></div>
 
   <!-- HISTORY -->
   <div class="history-section">
     <div class="history-title">// Журнал событий</div>
-    <div class="history-list" id="historyList"><div class="h-item"><div class="h-dot none"></div>Ожидание начала игры...</div></div>
+    <div class="history-list" id="historyList"></div>
   </div>
 
 </div>
@@ -517,21 +439,67 @@ let tmpCfg = { n: 3, ppm: 10 };
 
 const st = {
   on: false,
-  secs: 0,
   iv: null,
-  scores: { red:0, blue:0, yellow:0 },
+  // Wall-clock based timing (survives screen lock)
+  startWallTime: null,  // Date.now() when last started/resumed
+  baseSecs: 0,          // accumulated game seconds before current run
+  scores: { red:0, blue:0, yellow:0 }, // locked scores (updated on pause/capture)
   pts: [],
   log: [],
 };
 
 function initPts() {
   st.pts = Array.from({length: cfg.n}, (_, i) => ({
-    id: 'p'+(i+1), name:'ТОЧКА '+(i+1), owner:null, secs:0
+    id: 'p'+(i+1), name:'ТОЧКА '+(i+1),
+    owner: null,
+    captureWallTime: null, // Date.now() when current owner captured
+    lockedSecs: 0,         // seconds locked in at pause
   }));
 }
 
 function fmt(s) {
+  s = Math.max(0, Math.floor(s));
   return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+}
+
+// Real current game seconds (works after screen unlock)
+function gameSecs() {
+  if (!st.on || !st.startWallTime) return st.baseSecs;
+  return st.baseSecs + (Date.now() - st.startWallTime) / 1000;
+}
+
+// Real seconds this team has held a point
+function ptSecs(pt) {
+  if (!pt.owner) return 0;
+  if (!st.on || !pt.captureWallTime) return pt.lockedSecs;
+  return pt.lockedSecs + (Date.now() - pt.captureWallTime) / 1000;
+}
+
+// Live score for a team (locked + currently holding)
+function liveScore(t) {
+  let extra = 0;
+  if (st.on) {
+    st.pts.forEach(pt => {
+      if (pt.owner === t && pt.captureWallTime) {
+        extra += ((Date.now() - pt.captureWallTime) / 1000) * (cfg.ppm / 60);
+      }
+    });
+  }
+  return st.scores[t] + extra;
+}
+
+// Lock in live scores & point timers (called on pause or capture)
+function lockState() {
+  st.pts.forEach(pt => {
+    if (pt.owner && pt.captureWallTime && st.on) {
+      const elapsed = (Date.now() - pt.captureWallTime) / 1000;
+      st.scores[pt.owner] += elapsed * (cfg.ppm / 60);
+      pt.lockedSecs += elapsed;
+      pt.captureWallTime = null;
+    }
+  });
+  st.baseSecs = gameSecs();
+  st.startWallTime = null;
 }
 
 // ── SETTINGS ──
@@ -596,12 +564,12 @@ function buildCards() {
 }
 
 function ui() {
-  document.getElementById('gameTime').textContent = fmt(st.secs);
+  document.getElementById('gameTime').textContent = fmt(gameSecs());
   document.getElementById('dispPts').textContent  = cfg.ppm;
   document.getElementById('dispNum').textContent  = cfg.n;
 
   ['red','blue','yellow'].forEach(t => {
-    document.getElementById('score-'+t).textContent = Math.floor(st.scores[t]);
+    document.getElementById('score-'+t).textContent = Math.floor(liveScore(t));
     document.getElementById('sc-'+t).classList.toggle('active', st.pts.some(p=>p.owner===t));
   });
 
@@ -614,7 +582,7 @@ function ui() {
     own.className = 'owner-name '+(pt.owner||'none');
     own.textContent = pt.owner ? TEAMS[pt.owner].name.toUpperCase() : 'СВОБОДНА';
     tmr.className = 'pt-timer '+(pt.owner||'none');
-    tmr.textContent = fmt(pt.secs);
+    tmr.textContent = fmt(ptSecs(pt));
     ['red','blue','yellow'].forEach(t => {
       const btn = document.getElementById(`tb-${pt.id}-${t}`);
       if (!btn) return;
@@ -645,7 +613,16 @@ function capture(pid, team) {
   const pt = st.pts.find(p=>p.id===pid);
   if (pt.owner===team) return;
   const prev = pt.owner;
-  pt.owner = team; pt.secs = 0;
+
+  // Lock in score for previous owner
+  if (prev && pt.captureWallTime) {
+    const elapsed = (Date.now() - pt.captureWallTime) / 1000;
+    st.scores[prev] += elapsed * (cfg.ppm / 60);
+  }
+
+  pt.owner = team;
+  pt.captureWallTime = Date.now();
+  pt.lockedSecs = 0;
 
   beep(team);
 
@@ -655,38 +632,42 @@ function capture(pid, team) {
   const text = prev
     ? `${pt.name}: ${TEAMS[prev].name} → ${TEAMS[team].name}`
     : `${pt.name} захвачена — ${TEAMS[team].name}`;
-  st.log.unshift({ text, team, time: fmt(st.secs) });
+  st.log.unshift({ text, team, time: fmt(gameSecs()) });
 
   ui(); renderLog();
-}
-
-// ── TICK ──
-function tick() {
-  st.secs++;
-  const pps = cfg.ppm / 60;
-  st.pts.forEach(pt => {
-    if (pt.owner) { pt.secs++; st.scores[pt.owner] += pps; }
-  });
-  ui();
 }
 
 // ── CONTROLS ──
 document.getElementById('btnStartStop').addEventListener('click', () => {
   try { getCtx().resume(); } catch(e) {}
   if (!st.on) {
+    // START / RESUME
     st.on = true;
-    st.iv = setInterval(tick, 1000);
+    st.startWallTime = Date.now();
+    // Resume all held points from now
+    st.pts.forEach(pt => {
+      if (pt.owner) pt.captureWallTime = Date.now();
+    });
+    st.iv = setInterval(ui, 1000);
     document.getElementById('btnStartStop').textContent = '⏸ ПАУЗА';
     if (!st.log.length) { st.log.unshift({text:'Игра началась!',team:'none',time:'00:00'}); renderLog(); }
   } else {
-    st.on = false; clearInterval(st.iv);
+    // PAUSE — lock all live time into scores
+    lockState();
+    st.on = false;
+    clearInterval(st.iv);
     document.getElementById('btnStartStop').textContent = '▶ ПРОДОЛЖИТЬ';
   }
   ui();
 });
 
+// When screen unlocks / tab becomes visible — sync UI immediately
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && st.on) ui();
+});
+
 document.getElementById('btnReset').addEventListener('click', () => {
-  if (st.on) { clearInterval(st.iv); st.on = false; }
+  if (st.on) { lockState(); clearInterval(st.iv); st.on = false; }
   const total = st.scores.red + st.scores.blue + st.scores.yellow;
   if (total > 0) showGO(); else resetGame();
 });
@@ -698,7 +679,9 @@ document.getElementById('btnCloseGo').addEventListener('click', () => {
 
 function resetGame() {
   if (st.iv) clearInterval(st.iv);
-  st.on = false; st.secs = 0;
+  st.on = false;
+  st.startWallTime = null;
+  st.baseSecs = 0;
   st.scores = {red:0,blue:0,yellow:0};
   st.log = [];
   document.getElementById('btnStartStop').textContent = '▶ СТАРТ';
@@ -706,7 +689,7 @@ function resetGame() {
 }
 
 function showGO() {
-  const s = st.scores;
+  const s = { red: liveScore('red'), blue: liveScore('blue'), yellow: liveScore('yellow') };
   const max = Math.max(s.red,s.blue,s.yellow);
   let w = 'red';
   if (s.blue > s.red && s.blue >= max) w = 'blue';
@@ -728,6 +711,5 @@ function showGO() {
 // ── INIT ──
 initPts(); buildCards(); renderLog(); ui();
 </script>
-
-
-</body></html>
+</body>
+</html>
