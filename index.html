@@ -502,6 +502,43 @@ function lockState() {
   st.startWallTime = null;
 }
 
+// ── PERSISTENCE ──
+function saveState() {
+  try {
+    localStorage.setItem('pb_cfg',   JSON.stringify(cfg));
+    localStorage.setItem('pb_sound', soundOn ? '1' : '0');
+    localStorage.setItem('pb_game',  JSON.stringify({
+      on:             st.on,
+      startWallTime:  st.startWallTime,
+      baseSecs:       st.baseSecs,
+      scores:         st.scores,
+      pts:            st.pts,
+      log:            st.log,
+    }));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const rawCfg  = localStorage.getItem('pb_cfg');
+    const rawGame = localStorage.getItem('pb_game');
+    if (!rawCfg && !rawGame) return false;
+    if (rawCfg)  cfg     = JSON.parse(rawCfg);
+    soundOn = localStorage.getItem('pb_sound') !== '0';
+    if (!rawGame) return false;
+    const g = JSON.parse(rawGame);
+    st.on            = g.on;
+    st.startWallTime = g.startWallTime;
+    st.baseSecs      = g.baseSecs      ?? 0;
+    st.scores        = g.scores        ?? { red:0, blue:0, yellow:0 };
+    st.pts           = g.pts           ?? [];
+    st.log           = g.log           ?? [];
+    return st.pts.length > 0;
+  } catch(e) {
+    return false;
+  }
+}
+
 // ── SETTINGS ──
 const clamp = (v,a,b) => Math.min(Math.max(v,a),b);
 
@@ -635,6 +672,7 @@ function capture(pid, team) {
   st.log.unshift({ text, team, time: fmt(gameSecs()) });
 
   ui(); renderLog();
+  saveState();
 }
 
 // ── CONTROLS ──
@@ -659,6 +697,7 @@ document.getElementById('btnStartStop').addEventListener('click', () => {
     document.getElementById('btnStartStop').textContent = '▶ ПРОДОЛЖИТЬ';
   }
   ui();
+  saveState();
 });
 
 // ── WAKE UP after screen lock / background / tab switch ──
@@ -702,6 +741,7 @@ function resetGame() {
   st.log = [];
   document.getElementById('btnStartStop').textContent = '▶ СТАРТ';
   initPts(); buildCards(); renderLog(); ui();
+  saveState();
 }
 
 function showGO() {
@@ -725,7 +765,25 @@ function showGO() {
 }
 
 // ── INIT ──
-initPts(); buildCards(); renderLog(); ui();
+const _restored = loadState();
+if (!_restored) initPts();
+
+// Sync UI to loaded cfg/sound
+tmpCfg = {...cfg};
+document.getElementById('ptsVal').textContent   = cfg.n;
+document.getElementById('scoreVal').textContent = cfg.ppm;
+document.getElementById('soundToggle').textContent   = soundOn ? '🔔' : '🔕';
+document.getElementById('soundSubLabel').textContent = soundOn ? 'включён' : 'выключен';
+
+// If game was running when page was killed — resume the interval
+if (st.on) {
+  st.iv = setInterval(ui, 1000);
+  document.getElementById('btnStartStop').textContent = '⏸ ПАУЗА';
+} else if (st.baseSecs > 0 || st.scores.red || st.scores.blue || st.scores.yellow) {
+  document.getElementById('btnStartStop').textContent = '▶ ПРОДОЛЖИТЬ';
+}
+
+buildCards(); renderLog(); ui();
 </script>
 </body>
 </html>
